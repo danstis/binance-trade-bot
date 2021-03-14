@@ -6,6 +6,7 @@ from binance.client import Client
 from binance.exceptions import BinanceAPIException
 from cachetools import TTLCache, cached
 
+from .binance_stream_manager import BinanceCache, BinanceStreamManager
 from .config import Config
 from .database import Database
 from .logger import Logger
@@ -31,6 +32,8 @@ class BinanceAPIManager:
         self.db = db
         self.logger = logger
         self.config = config
+        self.cache = BinanceCache()
+        self.stream_manager = BinanceStreamManager(self.cache, self.binance_client, self.logger)
 
     @cached(cache=TTLCache(maxsize=1, ttl=43200))
     def get_trade_fees(self) -> Dict[str, float]:
@@ -50,6 +53,7 @@ class BinanceAPIManager:
             if selling
             else self._buy_quantity(origin_coin.symbol, target_coin.symbol)
         )
+
         fee_amount = amount_trading * base_fee * 0.75
         if origin_coin.symbol == "BNB":
             fee_amount_bnb = fee_amount
@@ -58,7 +62,9 @@ class BinanceAPIManager:
             if origin_price is None:
                 return base_fee
             fee_amount_bnb = fee_amount * origin_price
+
         bnb_balance = self.get_currency_balance("BNB")
+
         if bnb_balance >= fee_amount_bnb:
             return base_fee * 0.75
         return base_fee
@@ -73,19 +79,28 @@ class BinanceAPIManager:
         """
         Get ticker price of a specific coin
         """
-        for ticker in self.binance_client.get_symbol_ticker():
-            if ticker["symbol"] == ticker_symbol:
-                return float(ticker["price"])
-        return None
+        price = self.cache.ticker_values.get(ticker_symbol, None)
+        if price is None:
+            self.cache.ticker_values = {
+                ticker["symbol"]: float(ticker["price"]) for ticker in self.binance_client.get_symbol_ticker()
+            }
+            price = self.cache.ticker_values.get(ticker_symbol, None)
+
+        return price
 
     def get_currency_balance(self, currency_symbol: str):
         """
         Get balance of a specific coin
         """
-        for currency_balance in self.binance_client.get_account()["balances"]:
-            if currency_balance["asset"] == currency_symbol:
-                return float(currency_balance["free"])
-        return None
+        balance = self.cache.balances.get(currency_symbol, None)
+        if balance is None:
+            self.cache.balances = {
+                currency_balance["asset"]: float(currency_balance["free"])
+                for currency_balance in self.binance_client.get_account()["balances"]
+            }
+            balance = self.cache.balances.get(currency_symbol, None)
+
+        return balance
 
     def retry(self, func, *args, **kwargs):
         time.sleep(1)
@@ -207,7 +222,7 @@ class BinanceAPIManager:
         origin_tick = self.get_alt_tick(origin_symbol, target_symbol)
         return math.floor(target_balance * 10 ** origin_tick / from_coin_price) / float(10 ** origin_tick)
 
-    def _buy_alt(self, origin_coin: Coin, target_coin: Coin, all_tickers):
+    def _buy_alt(self, origin_coin: Coin, target_coin: Coin):
         """
         Buy altcoin
         """
