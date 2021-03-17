@@ -51,7 +51,7 @@ jobs:
 
       - uses: brpaz/hadolint-action@v1.3.1
         with:
-          dockerfile: ./dockerfile
+          dockerfile: ./Dockerfile
 
   Docker:
     runs-on: ubuntu-latest
