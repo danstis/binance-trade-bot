@@ -49,6 +49,10 @@ jobs:
         with:
           extra_args: --files ${{ steps.changed-files.outputs.repo_files }}
 
+      - uses: brpaz/hadolint-action@v1.3.1
+        with:
+          dockerfile: ./dockerfile
+
   Docker:
     runs-on: ubuntu-latest
     needs: Lint
@@ -66,10 +70,6 @@ jobs:
       - name: Version with GitVersion # https://github.com/marketplace/actions/use-actions
         id: gitversion
         uses: gittools/actions/gitversion/execute@v0.9.9
-
-      - uses: brpaz/hadolint-action@v1.3.1
-        with:
-          dockerfile: ./dockerfile
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
