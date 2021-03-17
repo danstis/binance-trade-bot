@@ -2,7 +2,7 @@ assembly-versioning-scheme: MajorMinorPatch
 mode: Mainline
 branches:
   master:
-    regex: ^master|^main
+    regex: ^experimental
     increment: Minor
 increment: Minor
 ignore:
