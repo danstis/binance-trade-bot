@@ -4,7 +4,7 @@ WORKDIR /install
 
 COPY requirements.txt /requirements.txt
 
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
 
 # hadolint ignore=SC1091,DL3008
 RUN apt-get update && apt-get install -y curl --no-install-recommends && \
