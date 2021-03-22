@@ -6,7 +6,7 @@ from binance.client import Client
 from binance.exceptions import BinanceAPIException
 from cachetools import TTLCache, cached
 
-from .binance_stream_manager import BinanceCache, BinanceStreamManager
+from .binance_stream_manager import BinanceCache, BinanceOrder, BinanceStreamManager
 from .config import Config
 from .database import Database
 from .logger import Logger
@@ -123,33 +123,22 @@ class BinanceAPIManager:
     def get_min_notional(self, origin_symbol: str, target_symbol: str):
         return float(self.get_symbol_filter(origin_symbol, target_symbol, "MIN_NOTIONAL")["minNotional"])
 
-    def wait_for_order(self, origin_symbol, target_symbol, order_id):
+    def wait_for_order(self, order_id) -> BinanceOrder:
         while True:
-            try:
-                order_status = self.binance_client.get_order(symbol=origin_symbol + target_symbol, orderId=order_id)
+            order_status: BinanceOrder = self.cache.orders.get(order_id, None)
+            if order_status is not None:
                 break
-            except BinanceAPIException as e:
-                self.logger.info(e)
-                time.sleep(1)
-            except Exception as e:  # pylint: disable=broad-except
-                self.logger.info(f"Unexpected Error: {e}")
-                time.sleep(1)
+            time.sleep(1)
 
         self.logger.info(order_status)
 
-        while order_status["status"] != "FILLED":
-            try:
-                order_status = self.binance_client.get_order(symbol=origin_symbol + target_symbol, orderId=order_id)
-            except BinanceAPIException as e:
-                self.logger.info(e)
-                time.sleep(1)
-            except Exception as e:  # pylint: disable=broad-except
-                self.logger.info(f"Unexpected Error: {e}")
-                time.sleep(1)
+        while order_status.status != "FILLED":
+            order_status = self.cache.orders.get(order_id, None)
+            time.sleep(1)
 
         return order_status
 
-    def buy_alt(self, origin_coin: Coin, target_coin: Coin):
+    def buy_alt(self, origin_coin: Coin, target_coin: Coin) -> BinanceOrder:
         return self.retry(self._buy_alt, origin_coin, target_coin)
 
     def _buy_quantity(
@@ -194,15 +183,15 @@ class BinanceAPIManager:
 
         trade_log.set_ordered(origin_balance, target_balance, order_quantity)
 
-        stat = self.wait_for_order(origin_symbol, target_symbol, order["orderId"])
+        order = self.wait_for_order(order["orderId"])
 
         self.logger.info(f"Bought {origin_symbol}")
 
-        trade_log.set_complete(stat["cummulativeQuoteQty"])
+        trade_log.set_complete(order.cumulative_quote_qty)
 
         return order
 
-    def sell_alt(self, origin_coin: Coin, target_coin: Coin):
+    def sell_alt(self, origin_coin: Coin, target_coin: Coin) -> BinanceOrder:
         return self.retry(self._sell_alt, origin_coin, target_coin)
 
     def _sell_quantity(self, origin_symbol: str, target_symbol: str, origin_balance: float = None):
@@ -238,7 +227,7 @@ class BinanceAPIManager:
         # Binance server can take some time to save the order
         self.logger.info("Waiting for Binance")
 
-        stat = self.wait_for_order(origin_symbol, target_symbol, order["orderId"])
+        order = self.wait_for_order(order["orderId"])
 
         new_balance = self.get_currency_balance(origin_symbol)
         while new_balance >= origin_balance:
@@ -246,6 +235,6 @@ class BinanceAPIManager:
 
         self.logger.info(f"Sold {origin_symbol}")
 
-        trade_log.set_complete(stat["cummulativeQuoteQty"])
+        trade_log.set_complete(order.cumulative_quote_qty)
 
         return order

@@ -30,7 +30,7 @@ class AutoTrader:
 
         result = self.manager.buy_alt(pair.to_coin, self.config.BRIDGE)
         if result is not None:
-            self.update_trade_threshold(pair.to_coin, float(result["price"]))
+            self.update_trade_threshold(pair.to_coin, result.price)
             return result
         self.logger.info("Couldn't buy, going back to scouting mode...")
         return None
