@@ -6,7 +6,7 @@ from binance.client import Client
 from binance.exceptions import BinanceAPIException
 from cachetools import TTLCache, cached
 
-from .binance_stream_manager import BinanceCache, BinanceStreamManager
+from .binance_stream_manager import BinanceCache, BinanceOrder, BinanceStreamManager
 from .config import Config
 from .database import Database
 from .logger import Logger
@@ -139,17 +139,12 @@ class BinanceAPIManager:
     def get_min_notional(self, origin_symbol: str, target_symbol: str):
         return float(self.get_symbol_filter(origin_symbol, target_symbol, "MIN_NOTIONAL")["minNotional"])
 
-    def wait_for_order(self, origin_symbol, target_symbol, order_id):
+    def wait_for_order(self, order_id) -> BinanceOrder:
         while True:
-            try:
-                order_status = self.binance_client.get_order(symbol=origin_symbol + target_symbol, orderId=order_id)
+            order_status: BinanceOrder = self.cache.orders.get(order_id, None)
+            if order_status is not None:
                 break
-            except BinanceAPIException as e:
-                self.logger.info(e)
-                time.sleep(1)
-            except Exception as e:  # pylint: disable=broad-except
-                self.logger.info(f"Unexpected Error: {e}")
-                time.sleep(1)
+            time.sleep(1)
 
         self.logger.info(order_status)
 
@@ -261,7 +256,7 @@ class BinanceAPIManager:
 
         trade_log.set_ordered(origin_balance, target_balance, order_quantity)
 
-        stat = self.wait_for_order(origin_symbol, target_symbol, order["orderId"])
+        order = self.wait_for_order(order["orderId"])
 
         if stat is None:
             return None
@@ -311,7 +306,7 @@ class BinanceAPIManager:
         # Binance server can take some time to save the order
         self.logger.info("Waiting for Binance")
 
-        stat = self.wait_for_order(origin_symbol, target_symbol, order["orderId"])
+        order = self.wait_for_order(order["orderId"])
 
         if stat is None:
             return None
@@ -322,6 +317,6 @@ class BinanceAPIManager:
 
         self.logger.info(f"Sold {origin_symbol}")
 
-        trade_log.set_complete(stat["cummulativeQuoteQty"])
+        trade_log.set_complete(order.cumulative_quote_qty)
 
         return order
