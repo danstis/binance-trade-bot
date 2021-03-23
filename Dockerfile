@@ -3,11 +3,11 @@ FROM --platform=$BUILDPLATFORM python:3.8 as builder
 
 WORKDIR /install
 
-# hadolint ignore=DL4006
 # SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # hadolint ignore=DL3008
 RUN apt-get update && apt-get install --no-install-recommends -y curl
+# hadolint ignore=DL4006
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 # hadolint ignore=SC1091
 RUN . /root/.cargo/env
