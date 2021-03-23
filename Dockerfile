@@ -4,8 +4,8 @@ WORKDIR /install
 
 COPY requirements.txt /requirements.txt
 
-# hadolint ignore=SC1091,DL3008,DL4006
-RUN apt-get update && apt-get install --no-install-recommends -y curl && \
+# hadolint ignore=SC1091,DL3008,DL4006,DL3015
+RUN apt-get update && apt-get install -y curl && \
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && \
     . /root/.cargo/env && \
     rustup toolchain install 1.41.0 && \
