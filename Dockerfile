@@ -10,7 +10,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y curl
 # hadolint ignore=DL4006
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 # hadolint ignore=SC1091
-RUN source /root/.cargo/env
+RUN . /root/.cargo/env
 RUN rustup toolchain install 1.41.0
 
 COPY requirements.txt /requirements.txt
