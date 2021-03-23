@@ -85,7 +85,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build and push pre-release
-        id: docker_build
+        id: docker_build_prerelease
         uses: docker/build-push-action@v2 # https://github.com/marketplace/actions/build-and-push-docker-images
         if: ${{ steps.gitversion.outputs.PreReleaseTagWithDash == '' }}
         with:
@@ -99,7 +99,7 @@ jobs:
             ${{ github.repository }}:${{ steps.gitversion.outputs.semVer }}
             ${{ github.repository }}:${{ steps.gitversion.outputs.escapedbranchname }}
 
-      - name: Build and push pre-release
+      - name: Build and push
         id: docker_build
         uses: docker/build-push-action@v2 # https://github.com/marketplace/actions/build-and-push-docker-images
         if: ${{ steps.gitversion.outputs.PreReleaseTagWithDash != '' }}
