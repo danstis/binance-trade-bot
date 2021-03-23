@@ -1,6 +1,6 @@
 import unittest
 
-from .utils import *
+from .utils import *  # pylint: disable=wildcard-import
 
 
 class TestUtils(unittest.TestCase):
