@@ -3,7 +3,7 @@ name: Build and Release
 on:
   push:
     branches:
-      - experimental
+      - "*"
   pull_request:
     branches:
       - experimental
