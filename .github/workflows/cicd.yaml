@@ -90,7 +90,7 @@ jobs:
         if: ${{ steps.gitversion.outputs.PreReleaseTagWithDash == '' }}
         with:
           platforms: linux/amd64,linux/arm64,linux/arm/v6,linux/arm/v7
-          # push: ${{ contains(github.ref, 'experimental') }}
+          push: true # ${{ contains(github.ref, 'experimental') }}
           tags: |
             ${{ github.repository }}:latest
             ${{ github.repository }}:${{ steps.gitversion.outputs.shortsha }}
@@ -105,7 +105,7 @@ jobs:
         if: ${{ steps.gitversion.outputs.PreReleaseTagWithDash != '' }}
         with:
           platforms: linux/amd64,linux/arm64,linux/arm/v6,linux/arm/v7
-          # push: ${{ contains(github.ref, 'experimental') }}
+          push: true # ${{ contains(github.ref, 'experimental') }}
           tags: |
             ${{ github.repository }}:${{ steps.gitversion.outputs.shortsha }}
             ${{ github.repository }}:${{ steps.gitversion.outputs.semVer }}
