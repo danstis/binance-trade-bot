@@ -50,12 +50,14 @@ def filter_period(query, model):  # pylint: disable=inconsistent-return-statemen
 def value_history(coin: str = None):
     session: Session
     with db.db_session() as session:
-        query = session.query(CoinValue).order_by(CoinValue.coin_id.asc(), CoinValue.datetime.asc())
+        query = session.query(CoinValue).order_by(
+            CoinValue.coin_id.asc(), CoinValue.datetime.asc())
 
         query = filter_period(query, CoinValue)
 
         if coin:
-            values: List[CoinValue] = query.filter(CoinValue.coin_id == coin).all()
+            values: List[CoinValue] = query.filter(
+                CoinValue.coin_id == coin).all()
             return jsonify([entry.info() for entry in values])
 
         coin_values = groupby(query.all(), key=lambda cv: cv.coin)
