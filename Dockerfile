@@ -1,5 +1,5 @@
 # hadolint ignore=DL3029
-FROM --platform=$BUILDPLATFORM python:3.8 as builder
+FROM --platform=$BUILDPLATFORM python:3.9.3 as builder
 
 WORKDIR /install
 
@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y curl && \
     rustup toolchain install 1.41.0 && \
     pip install --prefix=/install -r /requirements.txt
 
-FROM python:3.8-slim
+FROM python:3.9.3
 
 WORKDIR /app
 
