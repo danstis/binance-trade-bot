@@ -3,6 +3,7 @@ import sys
 from datetime import datetime
 
 from binance_trade_bot.auto_trader import AutoTrader
+from binance_trade_bot.models import Pair
 
 
 class Strategy(AutoTrader):
@@ -10,12 +11,15 @@ class Strategy(AutoTrader):
         super().initialize()
         self.initialize_current_coin()
 
+    def transaction_through_bridge(self, pair: Pair):
+        super().transaction_through_bridge(pair)
+
+        self.db.set_current_coin(pair.to_coin)
+
     def scout(self):
         """
         Scout for potential jumps from the current coin to another coin
         """
-        all_tickers = self.manager.get_all_market_tickers()
-
         current_coin = self.db.get_current_coin()
         # Display on the console, the current coin+Bridge, so users can see *some* activity and not think the bot has
         # stopped. Not logging though to reduce log size.
@@ -32,6 +36,7 @@ class Strategy(AutoTrader):
             return
 
         self._jump_to_best_coin(current_coin, current_coin_price, all_tickers)
+        self.bridge_scout()
 
     def bridge_scout(self):
         current_coin = self.db.get_current_coin()
@@ -63,6 +68,5 @@ class Strategy(AutoTrader):
             if self.config.CURRENT_COIN_SYMBOL == "":
                 current_coin = self.db.get_current_coin()
                 self.logger.info(f"Purchasing {current_coin} to begin trading")
-                all_tickers = self.manager.get_all_market_tickers()
-                self.manager.buy_alt(current_coin, self.config.BRIDGE, all_tickers)
+                self.manager.buy_alt(current_coin, self.config.BRIDGE)
                 self.logger.info("Ready to start trading")

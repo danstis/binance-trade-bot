@@ -41,7 +41,7 @@ class Strategy(AutoTrader):
                 end="\r",
             )
 
-            self._jump_to_best_coin(coin, coin_price, all_tickers)
+            self._jump_to_best_coin(coin, coin_price)
 
         if not have_coin:
             self.bridge_scout()

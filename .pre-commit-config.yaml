@@ -75,3 +75,4 @@ repos:
     - schedule==1.0.0
     - sqlalchemy==1.4.5
     - sqlitedict==1.7.0
+    - twisted==21.2.0
