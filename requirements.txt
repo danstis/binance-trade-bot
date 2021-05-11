@@ -1,5 +1,5 @@
 python-binance==0.7.9
-sqlalchemy==1.4.5
+sqlalchemy==1.4.15
 schedule==1.0.0
 apprise==0.9.1
 Flask==1.1.2
