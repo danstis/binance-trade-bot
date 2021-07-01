@@ -1,5 +1,5 @@
 # hadolint ignore=DL3029
-FROM --platform=$BUILDPLATFORM python:3.9.4 as builder
+FROM --platform=$BUILDPLATFORM python:3.9.6 as builder
 
 WORKDIR /install
 
@@ -10,7 +10,7 @@ COPY requirements.txt /requirements.txt
 # hadolint ignore=DL3042
 RUN pip install --prefix=/install -r /requirements.txt
 
-FROM python:3.9.4
+FROM python:3.9.6
 
 WORKDIR /app
 
